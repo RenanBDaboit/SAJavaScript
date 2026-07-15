@@ -7,7 +7,7 @@ class FuncionarioRepository {
         const [rows] = await connection.query("select * from funcionarios")
         
         const funcionarios = rows.map(row => 
-            new Funcionario(row.id, row.nome, row.login, "*****", row.salario)
+            new Funcionario(row.id, row.nome, row.login, row.senha, row.salario)
         );
 
         return funcionarios;
@@ -19,30 +19,40 @@ class FuncionarioRepository {
             [id]
         );
 
-        if(rows === 0) {
+        if(rows.length === 0){
             return null;
         }
 
-        return new Funcionario(rows[0].id, rows[0].nome, rows[0].login, "******", rows[0].salario);
+        return new Funcionario(rows[0].id, rows[0].nome, rows[0].login, rows[0].senha, rows[0].salario);
+    }
+
+    async buscarPorLogin(login){
+        const [rows] = await connection.query(
+            "select * from funcionarios where login = ?",
+            [login]
+        );
+
+        if(rows.length === 0){
+            return null;
+        }
+
+        return new Funcionario(rows[0].id, rows[0].nome, rows[0].login, rows[0].senha, rows[0].salario);
     }
 
     async cadastrar(funcionario){
 
-        await connection.query(
+        const [resultado] = await connection.query(
             "insert into funcionarios (nome, login, senha, salario) values (?, ?, ?, ?)", 
             [funcionario.nome, funcionario.login, funcionario.senha, funcionario.salario]
         );
     
-        return {
-            id: resultado.insertId,
-            ...funcionario
-        };
+        return resultado;
     }
 
     async atualizar(funcionario) {
 
         const [resultado] = await connection.query(
-            "update funcionarios set nome = ?, set login = ?, set senha = ?, set salario = ?  where id = ?",
+            "update funcionarios set nome = ?, login = ?, senha = ?, salario = ?  where id = ?",
             [funcionario.nome, funcionario.login, funcionario.senha, funcionario.salario, funcionario.id]
         );
 
@@ -58,3 +68,5 @@ class FuncionarioRepository {
         return resultado;
     }
 }
+
+module.exports = FuncionarioRepository;
